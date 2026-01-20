@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Birmingham Council Tax vs Property Value Comparison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th.sortable:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.5;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .band {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .band-A { background: #d4edda; color: #155724; }
+        .band-B { background: #d1ecf1; color: #0c5460; }
+        .band-C { background: #fff3cd; color: #856404; }
+        .band-D { background: #ffe5b4; color: #7d5e00; }
+        .band-E { background: #ffd9a0; color: #6d4c00; }
+        .band-F { background: #ffc08a; color: #5d3c00; }
+        .band-G { background: #ffb6c1; color: #6b2c3c; }
+        .band-H { background: #f8d7da; color: #721c24; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h4 {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            th, td {
+                padding: 8px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏘️ Birmingham Council Tax vs Property Value Comparison</h1>
+        <p class="subtitle">2023/24 Council Tax Rates | Sample Property Data</p>
+
+        <div class="info-box">
+            <h3>About This Data</h3>
+            <p>This comparison shows sample properties in Birmingham, UK with their council tax bands and estimated property values.
+            Council tax bands are determined by property values as of 1991. The data shown includes 2023/24 Birmingham City Council rates.</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="searchAddress">Search Address</label>
+                <input type="text" id="searchAddress" placeholder="Enter address or postcode...">
+            </div>
+            <div class="filter-group">
+                <label for="filterBand">Filter by Band</label>
+                <select id="filterBand">
+                    <option value="">All Bands</option>
+                    <option value="A">Band A</option>
+                    <option value="B">Band B</option>
+                    <option value="C">Band C</option>
+                    <option value="D">Band D</option>
+                    <option value="E">Band E</option>
+                    <option value="F">Band F</option>
+                    <option value="G">Band G</option>
+                    <option value="H">Band H</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="minValue">Min Property Value (£)</label>
+                <input type="number" id="minValue" placeholder="e.g., 100000">
+            </div>
+            <div class="filter-group">
+                <label for="maxValue">Max Property Value (£)</label>
+                <input type="number" id="maxValue" placeholder="e.g., 500000">
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="propertyTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-column="address">Address</th>
+                        <th class="sortable" data-column="band">Council Tax Band</th>
+                        <th class="sortable" data-column="councilTax">Annual Council Tax (£)</th>
+                        <th class="sortable" data-column="propertyValue">Property Value (£)</th>
+                        <th class="sortable" data-column="percentage">Tax as % of Value</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h4>Total Properties</h4>
+                <div class="value" id="statTotal">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Average Property Value</h4>
+                <div class="value" id="statAvgValue">£0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Average Council Tax</h4>
+                <div class="value" id="statAvgTax">£0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Avg Tax % of Value</h4>
+                <div class="value" id="statAvgPercentage">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Birmingham Council Tax Rates 2023/24
+        const councilTaxRates = {
+            'A': 1484.94,
+            'B': 1732.42,
+            'C': 1979.92,
+            'D': 2227.41,
+            'E': 2722.40,
+            'F': 3217.36,
+            'G': 3712.35,
+            'H': 4454.82
+        };
+
+        // Sample Birmingham property data
+        const properties = [
+            { address: '45 Station Road, Erdington, B23 6UE', band: 'A', propertyValue: 95000 },
+            { address: '12 Reservoir Road, Erdington, B23 6DL', band: 'A', propertyValue: 110000 },
+            { address: '78 Green Lane, Small Heath, B9 5PQ', band: 'B', propertyValue: 135000 },
+            { address: '23 Albert Road, Aston, B6 5NW', band: 'B', propertyValue: 145000 },
+            { address: '156 Witton Lane, West Bromwich, B71 4JL', band: 'C', propertyValue: 165000 },
+            { address: '34 Gravelly Hill, Erdington, B23 6BL', band: 'C', propertyValue: 178000 },
+            { address: '89 College Road, Kingstanding, B44 0HH', band: 'C', propertyValue: 172000 },
+            { address: '67 Bristol Road, Selly Oak, B29 6AU', band: 'D', propertyValue: 215000 },
+            { address: '45 Harborne Road, Edgbaston, B15 3HE', band: 'D', propertyValue: 235000 },
+            { address: '12 Woodbourne Road, Harborne, B17 8BY', band: 'D', propertyValue: 228000 },
+            { address: '234 Hagley Road, Edgbaston, B16 9NP', band: 'E', propertyValue: 285000 },
+            { address: '78 Wellington Road, Edgbaston, B15 2EY', band: 'E', propertyValue: 310000 },
+            { address: '156 Calthorpe Road, Edgbaston, B15 1TH', band: 'E', propertyValue: 295000 },
+            { address: '23 Augustus Road, Edgbaston, B15 3NB', band: 'F', propertyValue: 385000 },
+            { address: '91 Farquhar Road, Edgbaston, B15 2QP', band: 'F', propertyValue: 425000 },
+            { address: '45 Church Road, Edgbaston, B15 3SJ', band: 'F', propertyValue: 410000 },
+            { address: '67 Carpenter Road, Edgbaston, B15 2JJ', band: 'G', propertyValue: 525000 },
+            { address: '12 Somerset Road, Edgbaston, B15 2QD', band: 'G', propertyValue: 565000 },
+            { address: '89 Westfield Road, Edgbaston, B15 3QE', band: 'G', propertyValue: 595000 },
+            { address: '34 Ampton Road, Edgbaston, B15 2UJ', band: 'G', propertyValue: 550000 },
+            { address: '156 Portland Road, Edgbaston, B16 9HN', band: 'H', propertyValue: 725000 },
+            { address: '23 Richmond Hill Road, Edgbaston, B15 3RP', band: 'H', propertyValue: 825000 },
+            { address: '78 Yateley Road, Edgbaston, B15 2LP', band: 'H', propertyValue: 895000 },
+            { address: '91 Wheeleys Road, Edgbaston, B15 2LL', band: 'H', propertyValue: 950000 },
+            { address: '45 Norfolk Road, Edgbaston, B15 3PT', band: 'H', propertyValue: 1150000 },
+            { address: '123 City Road, Hockley, B1 2NE', band: 'B', propertyValue: 140000 },
+            { address: '67 Summer Hill Road, Ladywood, B1 3RB', band: 'C', propertyValue: 168000 },
+            { address: '234 Pershore Road, Selly Park, B29 7PU', band: 'D', propertyValue: 225000 },
+            { address: '89 Clarence Road, Moseley, B13 9TQ', band: 'E', propertyValue: 298000 },
+            { address: '156 Wake Green Road, Moseley, B13 9PD', band: 'F', propertyValue: 395000 }
+        ];
+
+        // Add calculated fields
+        properties.forEach(property => {
+            property.councilTax = councilTaxRates[property.band];
+            property.percentage = ((property.councilTax / property.propertyValue) * 100).toFixed(3);
+        });
+
+        let currentSort = { column: null, ascending: true };
+        let filteredProperties = [...properties];
+
+        function formatCurrency(value) {
+            return '£' + value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatCurrencyNoDecimals(value) {
+            return '£' + value.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="no-results">No properties match your filters</td></tr>';
+                updateStats([]);
+                return;
+            }
+
+            tbody.innerHTML = data.map(property => `
+                <tr>
+                    <td>${property.address}</td>
+                    <td><span class="band band-${property.band}">Band ${property.band}</span></td>
+                    <td>${formatCurrency(property.councilTax)}</td>
+                    <td>${formatCurrencyNoDecimals(property.propertyValue)}</td>
+                    <td>${property.percentage}%</td>
+                </tr>
+            `).join('');
+
+            updateStats(data);
+        }
+
+        function updateStats(data) {
+            if (data.length === 0) {
+                document.getElementById('statTotal').textContent = '0';
+                document.getElementById('statAvgValue').textContent = '£0';
+                document.getElementById('statAvgTax').textContent = '£0';
+                document.getElementById('statAvgPercentage').textContent = '0%';
+                return;
+            }
+
+            const avgValue = data.reduce((sum, p) => sum + p.propertyValue, 0) / data.length;
+            const avgTax = data.reduce((sum, p) => sum + p.councilTax, 0) / data.length;
+            const avgPercentage = data.reduce((sum, p) => sum + parseFloat(p.percentage), 0) / data.length;
+
+            document.getElementById('statTotal').textContent = data.length;
+            document.getElementById('statAvgValue').textContent = formatCurrencyNoDecimals(avgValue);
+            document.getElementById('statAvgTax').textContent = formatCurrency(avgTax);
+            document.getElementById('statAvgPercentage').textContent = avgPercentage.toFixed(3) + '%';
+        }
+
+        function sortData(column) {
+            if (currentSort.column === column) {
+                currentSort.ascending = !currentSort.ascending;
+            } else {
+                currentSort.column = column;
+                currentSort.ascending = true;
+            }
+
+            filteredProperties.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                if (column === 'propertyValue' || column === 'councilTax') {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else if (column === 'percentage') {
+                    aVal = parseFloat(aVal);
+                    bVal = parseFloat(bVal);
+                } else if (column === 'address') {
+                    aVal = aVal.toLowerCase();
+                    bVal = bVal.toLowerCase();
+                }
+
+                if (aVal < bVal) return currentSort.ascending ? -1 : 1;
+                if (aVal > bVal) return currentSort.ascending ? 1 : -1;
+                return 0;
+            });
+
+            renderTable(filteredProperties);
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchAddress').value.toLowerCase();
+            const bandFilter = document.getElementById('filterBand').value;
+            const minValue = parseFloat(document.getElementById('minValue').value) || 0;
+            const maxValue = parseFloat(document.getElementById('maxValue').value) || Infinity;
+
+            filteredProperties = properties.filter(property => {
+                const matchesSearch = property.address.toLowerCase().includes(searchTerm);
+                const matchesBand = !bandFilter || property.band === bandFilter;
+                const matchesMinValue = property.propertyValue >= minValue;
+                const matchesMaxValue = property.propertyValue <= maxValue;
+
+                return matchesSearch && matchesBand && matchesMinValue && matchesMaxValue;
+            });
+
+            if (currentSort.column) {
+                sortData(currentSort.column);
+            } else {
+                renderTable(filteredProperties);
+            }
+        }
+
+        // Event listeners
+        document.getElementById('searchAddress').addEventListener('input', applyFilters);
+        document.getElementById('filterBand').addEventListener('change', applyFilters);
+        document.getElementById('minValue').addEventListener('input', applyFilters);
+        document.getElementById('maxValue').addEventListener('input', applyFilters);
+
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                sortData(th.dataset.column);
+            });
+        });
+
+        // Initial render
+        renderTable(properties);
+    </script>
+</body>
+</html>
